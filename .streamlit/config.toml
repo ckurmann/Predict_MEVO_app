@@ -1,0 +1,6 @@
+[theme]
+primaryColor = "#1e40af"           # Blue buttons
+backgroundColor = "#1e1b4b"        # Dark navy blue
+secondaryBackgroundColor = "#1e3a8a" # Navy sidebar
+textColor = "#f8fafc"              # Light gray (perfect contrast)
+       
