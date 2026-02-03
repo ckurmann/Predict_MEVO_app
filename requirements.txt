@@ -1,8 +1,5 @@
-cat > requirements.txt << 'EOF'
 streamlit
 numpy
 joblib
 matplotlib
 tabpfn
-EOF
-
