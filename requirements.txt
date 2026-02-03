@@ -2,4 +2,4 @@ streamlit
 numpy
 joblib
 matplotlib
-tabpfn==0.1.14
+tabpfn==0.1.11
