@@ -1,9 +1,5 @@
-cat > requirements.txt << EOF
 streamlit
 numpy
 joblib
-tabpfn
-scikit-learn
 matplotlib
-pandas
-EOF
+tabpfn
