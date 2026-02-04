@@ -95,7 +95,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Initialize session state
+# Initialize ALL session state variables
 if 'prediction_made' not in st.session_state:
     st.session_state.prediction_made = False
 if 'show_sidebar' not in st.session_state:
@@ -154,7 +154,7 @@ def create_plot(probs, ci_lower, ci_upper, _image_path="Fig2_probabilites_good_o
         ax.axvspan(x_lower, x_upper, color='red', alpha=0.3, ymin=0.12)
         ax.axvline(x_mean, color='red', linewidth=2, linestyle='--', ymin=0.12)
         ax.axis('off')
-        plt.close('all')  # Free memory immediately
+        plt.close('all')
         return fig
     except:
         plt.close('all')
@@ -267,7 +267,7 @@ if st.session_state.last_input_hash != current_hash:
 # Predict button
 if st.sidebar.button("Predict Outcome", use_container_width=True):
     st.session_state.prediction_made = True
-    if st.session_state.show_sidebar:  # Only collapse once
+    if st.session_state.show_sidebar:
         st.session_state.show_sidebar = False
         st.components.v1.html("""
         <script>
@@ -299,7 +299,7 @@ if not st.session_state.prediction_made:
         </div>
     """, unsafe_allow_html=True)
 
-# Results - ONLY recompute if input changed
+# Results - FIXED comparison logic
 if st.session_state.prediction_made:
     if st.session_state.last_input_hash != st.session_state.last_computed_hash:
         st.session_state.probs = clf.predict_proba(input_data)[0, 1]
@@ -311,11 +311,11 @@ if st.session_state.prediction_made:
     ci_lower = st.session_state.ci_lower
     ci_upper = st.session_state.ci_upper
     
-    # Probability display
+    # FIXED color back to original #e2e8f0
     st.markdown(f"""
         <div style='text-align: center; padding: 20px;'>
             <p style='font-size: 26px; color: #e2e8f0; margin-bottom: 2px;'>Predicted Probability of Excellent Early Neurological Outcome (24h NIHSS 0-2 ) with Best Medical Treatment alone:</p>
-            <h1 style='font-size: 34px; color: #e8fafc; margin: 0;'><strong>{probs:.1%}</strong> <span style='font-size: 34px;'>(95% CI: {ci_lower:.1%}–{ci_upper:.1%})</span></h1>
+            <h1 style='font-size: 34px; color: #e2e8f0; margin: 0;'><strong>{probs:.1%}</strong> <span style='font-size: 34px;'>(95% CI: {ci_lower:.1%}–{ci_upper:.1%})</span></h1>
         </div>
     """, unsafe_allow_html=True)
 
@@ -347,7 +347,7 @@ if st.session_state.prediction_made:
         else:
             st.warning("Prediction visualization image not found.")
     
-    gc.collect()  # Force garbage collection
+    gc.collect()
 
 # Info section
 st.markdown("---")
@@ -365,7 +365,6 @@ with st.expander("More information about this model"):
     Use in conjunction with clinical expertise and current guideline recommendations.
     """)
 
-# Final cleanup
 gc.collect()
 
 
