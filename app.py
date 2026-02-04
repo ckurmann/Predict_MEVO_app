@@ -117,6 +117,22 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+st.markdown("""
+<style>
+/* Mobile sidebar auto-hide after prediction */
+@media (max-width: 768px) {
+    .prediction-made section[data-testid="stSidebar"] {
+        transform: translateX(-100%) !important;
+        transition: transform 0.3s ease !important;
+    }
+    .prediction-made [data-testid="collapsedControl"] {
+        display: block !important;
+    }
+}
+</style>
+""", unsafe_allow_html=True)
+
+
 
 # Initialize session state
 if 'prediction_made' not in st.session_state:
@@ -261,20 +277,6 @@ input_data = np.array([[
 # Predict button
 if st.sidebar.button("Predict Outcome", use_container_width=True):
     st.session_state.prediction_made = True
-    
-    # Auto-collapse sidebar on mobile only
-    st.components.v1.html("""
-    <script>
-    if (window.innerWidth <= 768) {
-        setTimeout(function() {
-            const btn = parent.document.querySelector('[data-testid="collapsedControl"]');
-            if (btn && !btn.matches(':disabled')) {
-                btn.click();
-            }
-        }, 150);
-    }
-    </script>
-    """, height=0)
 
 
 # Instruction box
