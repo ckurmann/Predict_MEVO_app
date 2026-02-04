@@ -19,6 +19,7 @@ import streamlit as st
 import numpy as np
 import joblib
 
+
 # CSS for larger expander title, text, and sidebar elements
 st.markdown("""
 <style>
@@ -98,10 +99,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Set webpage automatically to wide
-st.set_page_config(layout="wide", page_title="MDVO Predictor")
-
-
 # Initialize session state
 if 'prediction_made' not in st.session_state:
     st.session_state.prediction_made = False
@@ -171,6 +168,12 @@ st.html(f"""
     </div>
 """)
 
+# Set webpage configurations
+st.set_page_config(
+    page_title="MDVO Predictor", 
+    layout="wide", 
+    initial_sidebar_state="expanded"
+)
 
 
 #--Predictors--
@@ -244,37 +247,17 @@ if st.sidebar.button("Predict Outcome", use_container_width=True):
 # Instruction box
 if not st.session_state.prediction_made:
     st.markdown("""
-        <style>
-        .mobile-button {
-            background-color: #f1f5f9 !important;
-            padding: 20px !important;
-            border-radius: 12px !important;
-            border-left: 6px solid #cbd5e1 !important;
-            margin: 20px 0 !important;
-            text-align: center !important;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
-            width: 100% !important;
-            height: 80px !important;
-            font-size: 24px !important;
-            color: #475569 !important;
-            font-weight: bold !important;
-            border: none !important;
-        }
-        @media (max-width: 768px) {
-            .mobile-button { height: 100px !important; font-size: 26px !important; }
-        }
-        </style>
+        <div style='
+            padding: 20px; margin: 20px 0; text-align: center;
+        '>
+            <p style='color: #e2e8f0; margin: 10px 0 0 0; font-size: 22px;'>
+                Enter patient data on sidebar and click Predict Outcome
+            </p>
+            <p style='color: #e2e8f0; margin: 10px 0 0 0; font-size: 22px;'>
+                Tap <span style='font-size: 32px; '>»</span> (top-left) to open sidebar
+            </p>
+        </div>
     """, unsafe_allow_html=True)
-    
-    if st.button("Enter patient data on sidebar and click Predict Outcome", 
-                 key="mobile_button", 
-                 use_container_width=True,
-                 help="Opens sidebar"):
-        st.session_state.show_sidebar = True
-        st.sidebar.title("Patient Data")
-        st.rerun()
-
-
 
 # Results
 if st.session_state.prediction_made:
