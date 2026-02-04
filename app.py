@@ -99,7 +99,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Set webpage automatically to wide
-st.set_page_config(layout="wide", page_title="EENO Predictor for MDVO")
+st.set_page_config(layout="wide", page_title="MDVO Predictor")
 
 
 # Initialize session state
@@ -243,17 +243,43 @@ if st.sidebar.button("Predict Outcome", use_container_width=True):
 
 # Instruction box
 if not st.session_state.prediction_made:
+    # Custom styled button matching your exact design
     st.markdown("""
-        <div style='
-            background-color: #f1f5f9; padding: 20px; border-radius: 12px; 
-            border-left: 6px solid #cbd5e1; margin: 20px 0; text-align: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        '>
-            <h2 style='font-size: 24px; color: #475569; margin: 0; font-weight: bold;'>
-                Enter patient data on sidebar and click Predict Outcome
-            </h2>
+        <div style='text-align: center; margin: 20px 0;'>
+            <button onclick="window.dispatchEvent(new CustomEvent('sidebar_open'))" 
+                    style='
+                        background-color: #f1f5f9; 
+                        padding: 20px; 
+                        border-radius: 12px; 
+                        border-left: 6px solid #cbd5e1;
+                        border: none; 
+                        cursor: pointer; 
+                        font-family: inherit;
+                        width: 100%; 
+                        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                        transition: all 0.2s;
+                    ' 
+                    onmouseover="this.style.backgroundColor='#e2e8f0'; this.style.transform='translateY(-2px)'"
+                    onmouseout="this.style.backgroundColor='#f1f5f9'; this.style.transform='translateY(0)'">
+                <h2 style='
+                    font-size: 24px; 
+                    color: #475569; 
+                    margin: 0; 
+                    font-weight: bold;
+                '>
+                    Enter patient data on sidebar and click Predict Outcome
+                </h2>
+            </button>
         </div>
     """, unsafe_allow_html=True)
+    
+    # Listen for button click and show sidebar message
+    if 'sidebar_clicked' not in st.session_state:
+        st.session_state.sidebar_clicked = False
+    
+    # Force sidebar visibility on mobile
+    st.sidebar.markdown("## Patient Data Entry")
+
 
 
 # Results
