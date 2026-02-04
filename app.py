@@ -19,8 +19,20 @@ import streamlit as st
 import numpy as np
 import joblib
 
+# Initialize session state FIRST
+if 'prediction_made' not in st.session_state:
+    st.session_state.prediction_made = False
+if 'show_sidebar' not in st.session_state:
+    st.session_state.show_sidebar = True
 
-# CSS for larger expander title, text, and sidebar elements
+# Set webpage configurations - MUST BE EARLY
+st.set_page_config(
+    page_title="MDVO Predictor", 
+    layout="wide", 
+    initial_sidebar_state="expanded"
+)
+
+# CSS for larger expander title, text, and sidebar elements + mobile collapse
 st.markdown("""
 <style>
     /* SIDEBAR STYLING */
@@ -96,12 +108,26 @@ st.markdown("""
         background-color: #1d4ed8 !important;
         border: 1px solid white !important;
     }
+
+    /* MOBILE: Collapse sidebar after prediction */
+    @media (max-width: 768px) {
+        section[data-testid="stSidebar"].mobile-hide {
+            transform: translateX(-100%) !important;
+            transition: transform 0.3s ease !important;
+        }
+    }
 </style>
 """, unsafe_allow_html=True)
 
-# Initialize session state
-if 'prediction_made' not in st.session_state:
-    st.session_state.prediction_made = False
+# Force sidebar render
+st.sidebar.markdown("#")
+
+@st.cache_resource
+def load_model():
+    clf = joblib.load('no_dominant_m2_24h_nihss_cpu.pkl')
+    return clf
+
+clf = load_model()
 
 # Warning/Disclaimer
 st.markdown("""
@@ -113,17 +139,8 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-
-@st.cache_resource
-def load_model():
-    clf = joblib.load('no_dominant_m2_24h_nihss_cpu.pkl')
-    return clf
-
-
-clf = load_model()
-
-# Title and Reference Styling
-st.html(f"""
+# Title and Reference Styling - FIXED st.markdown
+st.markdown(f"""
     <div style="
         background-color: rgba(255, 255, 255, 0.05);
         padding: 35px 25px; 
@@ -165,18 +182,7 @@ st.html(f"""
             Kurmann CC et al. Prediction of Differential Treatment Response to EVT in MDVO Patients: A DISTAL Subanalysis. 2026.
         </p>
     </div>
-""")
-
-# Set webpage configurations
-if 'sidebar_state' not in st.session_state:
-    st.session_state.sidebar_state = 'expanded'
-
-st.set_page_config(
-    page_title="MDVO Predictor", 
-    layout="wide", 
-    initial_sidebar_state=st.session_state.sidebar_state  # Dynamic!
-)
-
+""", unsafe_allow_html=True)
 
 #--Predictors--
 # 1. Age
@@ -213,11 +219,11 @@ onset_to_img = st.sidebar.number_input("Time from onset to imaging (min)", 0, 20
 st.sidebar.markdown("---")
 st.sidebar.subheader("Intravenous Thrombolysis")
 ivt_selection = st.sidebar.radio(
-    label="",               # This must be a string
-    options=["No", "Yes"],  # This is your list
+    label="",               
+    options=["No", "Yes"],  
     index=0, 
     horizontal=True,
-    label_visibility="collapsed" # This hides the extra empty space
+    label_visibility="collapsed"
 )
 ivt_numeric = 1 if ivt_selection == "Yes" else 0
 
@@ -240,13 +246,25 @@ input_data = np.array([[
     diabetes_numeric, af_numeric, glucose, vessel_numeric, tissue_at_risk
 ]])
 
-
-# Predict button
+# Predict button - FIXED with mobile collapse
 if st.sidebar.button("Predict Outcome", use_container_width=True):
     st.session_state.prediction_made = True
-    st.session_state.sidebar_state = 'collapsed'  # Trigger collapse
-    st.rerun()  # Force re-render with new sidebar state
-
+    st.session_state.show_sidebar = False
+    
+    # Mobile collapse JS
+    st.markdown("""
+    <script>
+    setTimeout(() => {
+        if (window.innerWidth <= 768) {
+            const sidebar = parent.document.querySelector('section[data-testid="stSidebar"]');
+            if (sidebar) {
+                sidebar.classList.add('mobile-hide');
+            }
+        }
+    }, 50);
+    </script>
+    """, unsafe_allow_html=True)
+    st.rerun()
 
 # Instruction box
 if not st.session_state.prediction_made:
@@ -284,7 +302,6 @@ if st.session_state.prediction_made:
             </h1>
         </div>
     """, unsafe_allow_html=True)
-
 
     # Recommendation
     if ci_lower > 0.23:
@@ -332,7 +349,6 @@ if st.session_state.prediction_made:
         except:
             st.warning("Prediction visualization image not found.")
 
-
 # Info section at bottom of page
 st.markdown("---")
 
@@ -349,6 +365,7 @@ with st.expander("More information about this model"):
 
     Use in conjunction with clinical expertise and current guideline recommendations.
     """)
+
 
 # %%
 # import matplotlib.image as mpimg
