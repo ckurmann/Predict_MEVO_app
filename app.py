@@ -243,42 +243,36 @@ if st.sidebar.button("Predict Outcome", use_container_width=True):
 
 # Instruction box
 if not st.session_state.prediction_made:
-    # Custom styled button matching your exact design
     st.markdown("""
-        <div style='text-align: center; margin: 20px 0;'>
-            <button onclick="window.dispatchEvent(new CustomEvent('sidebar_open'))" 
-                    style='
-                        background-color: #f1f5f9; 
-                        padding: 20px; 
-                        border-radius: 12px; 
-                        border-left: 6px solid #cbd5e1;
-                        border: none; 
-                        cursor: pointer; 
-                        font-family: inherit;
-                        width: 100%; 
-                        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-                        transition: all 0.2s;
-                    ' 
-                    onmouseover="this.style.backgroundColor='#e2e8f0'; this.style.transform='translateY(-2px)'"
-                    onmouseout="this.style.backgroundColor='#f1f5f9'; this.style.transform='translateY(0)'">
-                <h2 style='
-                    font-size: 24px; 
-                    color: #475569; 
-                    margin: 0; 
-                    font-weight: bold;
-                '>
-                    Enter patient data on sidebar and click Predict Outcome
-                </h2>
-            </button>
-        </div>
+        <style>
+        .mobile-button {
+            background-color: #f1f5f9 !important;
+            padding: 20px !important;
+            border-radius: 12px !important;
+            border-left: 6px solid #cbd5e1 !important;
+            margin: 20px 0 !important;
+            text-align: center !important;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
+            width: 100% !important;
+            height: 80px !important;
+            font-size: 24px !important;
+            color: #475569 !important;
+            font-weight: bold !important;
+            border: none !important;
+        }
+        @media (max-width: 768px) {
+            .mobile-button { height: 100px !important; font-size: 26px !important; }
+        }
+        </style>
     """, unsafe_allow_html=True)
     
-    # Listen for button click and show sidebar message
-    if 'sidebar_clicked' not in st.session_state:
-        st.session_state.sidebar_clicked = False
-    
-    # Force sidebar visibility on mobile
-    st.sidebar.markdown("## Patient Data Entry")
+    if st.button("Enter patient data on sidebar and click Predict Outcome", 
+                 key="mobile_button", 
+                 use_container_width=True,
+                 help="Opens sidebar"):
+        st.session_state.show_sidebar = True
+        st.sidebar.title("Patient Data")
+        st.rerun()
 
 
 
