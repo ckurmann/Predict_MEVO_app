@@ -99,6 +99,25 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+st.markdown("""
+<style>
+    /* NEW: Mobile auto-collapse after prediction */
+    @media (max-width: 768px) {
+        /* Smooth transition for sidebar collapse */
+        section[data-testid="stSidebar"] {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* Ensure collapse button is always visible on mobile */
+        [data-testid="collapsedControl"] {
+            z-index: 9999 !important;
+            opacity: 1 !important;
+        }
+    }
+</style>
+""", unsafe_allow_html=True)
+
+
 # Initialize session state
 if 'prediction_made' not in st.session_state:
     st.session_state.prediction_made = False
@@ -242,6 +261,20 @@ input_data = np.array([[
 # Predict button
 if st.sidebar.button("Predict Outcome", use_container_width=True):
     st.session_state.prediction_made = True
+    
+    # Auto-collapse sidebar on mobile only
+    st.components.v1.html("""
+    <script>
+    if (window.innerWidth <= 768) {
+        setTimeout(function() {
+            const btn = parent.document.querySelector('[data-testid="collapsedControl"]');
+            if (btn && !btn.matches(':disabled')) {
+                btn.click();
+            }
+        }, 150);
+    }
+    </script>
+    """, height=0)
 
 
 # Instruction box
