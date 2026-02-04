@@ -82,7 +82,44 @@ if not st.session_state.get('css_loaded', False):
             background-color: #1d4ed8 !important;
             border: 1px solid white !important;
         }
+        /* PERFECTLY CENTERED PROMINENT RESET BUTTON */
+        .reset-container {
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            width: 100% !important;
+            margin: 40px 0 !important;
+            padding: 30px 0 !important;
+        }
+        .reset-button-container {
+            display: block !important;
+            text-align: center !important;
+            width: 320px !important;
+        }
+        .reset-button-container .stButton > button {
+            width: 100% !important;
+            height: 4.5em !important;
+            border-radius: 20px !important;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+            color: white !important;
+            border: none !important;
+            font-size: 22px !important;
+            font-weight: 800 !important;
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.4) !important;
+            text-transform: uppercase !important;
+            letter-spacing: 1px !important;
+            position: relative !important;
+        }
+        .reset-button-container .stButton > button:hover {
+            background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%) !important;
+            box-shadow: 0 15px 40px rgba(59, 130, 246, 0.6) !important;
+            transform: translateY(-3px) !important;
+        }
         @media (max-width: 768px) {
+            .reset-button-container {
+                width: 100% !important;
+                max-width: 320px !important;
+            }
             section[data-testid="stSidebar"].mobile-hide {
                 transform: translateX(-100%) !important;
                 transition: transform 0.3s ease !important;
@@ -351,6 +388,17 @@ if st.session_state.prediction_made:
             st.session_state.plot_fig = None
         else:
             st.warning("Prediction visualization image not found.")
+
+    # PERFECTLY CENTERED RESET BUTTON
+    st.markdown('<div class="reset-container">', unsafe_allow_html=True)
+    st.markdown('<div class="reset-button-container">', unsafe_allow_html=True)
+    if st.button("New Prediction", key="reset_btn"):
+        # Full reset - clear all session state
+        for key in list(st.session_state.keys()):
+            del st.session_state[key]
+        st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
     
     # Aggressive memory cleanup
     del input_data
