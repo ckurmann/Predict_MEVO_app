@@ -25,13 +25,6 @@ if 'prediction_made' not in st.session_state:
 if 'show_sidebar' not in st.session_state:
     st.session_state.show_sidebar = True
 
-# Set webpage configurations - MUST BE EARLY
-st.set_page_config(
-    page_title="MDVO Predictor", 
-    layout="wide", 
-    initial_sidebar_state="expanded"
-)
-
 # CSS for larger expander title, text, and sidebar elements + mobile collapse
 st.markdown("""
 <style>
@@ -118,6 +111,13 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
+
+# Set webpage configurations
+st.set_page_config(
+    page_title="MDVO Predictor", 
+    layout="wide", 
+    initial_sidebar_state="expanded"
+)
 
 # Force sidebar render
 st.sidebar.markdown("#")
