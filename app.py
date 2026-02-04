@@ -23,21 +23,21 @@ import joblib
 st.markdown("""
 <style>
     /* SIDEBAR STYLING */
-    /* Increase font size for sidebar labels (Age, Sex, etc.) */
+    /* font size for sidebar labels (Age, Sex, etc.) */
     section[data-testid="stSidebar"] label p {
-        font-size: 20px !important;
+        font-size: 16px !important;
     }
 
-    /* Increase font size for sidebar subheaders */
+    /* font size for sidebar subheaders */
     section[data-testid="stSidebar"] h3 {
-        font-size: 22px !important;
+        font-size: 18px !important;
         font-weight: 700 !important;
     }
 
-    /* Increase font size for radio buttons and checkboxes text */
+    /* font size for radio buttons and checkboxes text */
     section[data-testid="stSidebar"] .st-bt div, 
     section[data-testid="stSidebar"] [data-testid="stWidgetLabel"] p {
-        font-size: 20px !important;
+        font-size: 16px !important;
     }
 
     /* MAIN PAGE EXPANDER STYLING */
@@ -65,17 +65,17 @@ st.markdown("""
             
     /* Unify font size of the actual values inside all sidebar inputs (numbers and dropdowns) */
     section[data-testid="stSidebar"] input {
-        font-size: 20px !important; /* Matches your labels */
+        font-size: 16px !important; /* Matches your labels */
     }
 
     /* Target the dropdown text (Male/Female) specifically */
     section[data-testid="stSidebar"] div[data-baseweb="select"] div {
-        font-size: 20px !important;
+        font-size: 16px !important;
     }
             
     /* Target the button AND the paragraph tag inside it for the font size */
     section[data-testid="stSidebar"] div.stButton > button p {
-        font-size: 22px !important;
+        font-size: 18px !important;
         font-weight: 700 !important;
     }
 
@@ -127,36 +127,49 @@ def load_model():
 clf = load_model()
 
 # Title and Reference Styling
-st.markdown("""
-    <div style='
+st.html(f"""
+    <div style="
         background-color: rgba(255, 255, 255, 0.05);
         padding: 35px 25px; 
         border-radius: 15px; 
+        margin-left: auto;
+        margin-right: auto;
         margin-bottom: 25px;
         border: 1px solid rgba(226, 232, 240, 0.2);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
         text-align: center;
-    '>
-        <h1 style='
-            font-size: 42px; 
+        width: 100%;
+    ">
+        <h1 style="
+            font-size: 36px; 
             color: #f8fafc; 
-            margin: 0 0 15px 0; 
+            margin: 0px 0px 15px 0px !important; 
             font-weight: 800;
             letter-spacing: -0.5px;
-            line-height: 1.1;
-        '>
+            line-height: 1.2;
+            text-align: center;
+            display: block;
+            width: 100%;
+        ">
             TabPFN Model to Predict Treatment Response to EVT in MDVO
         </h1>
-        <p style='
-            color: #cbd5e1; 
-            font-size: 22px; 
+        <p style="
+            color: #f8fafc; 
+            font-size: 20px; 
             font-style: italic;
-            margin: 0;
+            margin: 0px !important;
             font-weight: 400;
-        '>
+            text-align: center;
+            display: block;
+            width: 100%;
+        ">
             Kurmann CC et al. Prediction of Differential Treatment Response to EVT in MDVO Patients: A DISTAL Subanalysis. 2026.
         </p>
     </div>
-""", unsafe_allow_html=True)
+""")
 
 
 
@@ -256,9 +269,9 @@ if st.session_state.prediction_made:
     # Probability display
     st.markdown(f"""
         <div style='text-align: center; padding: 20px;'>
-            <h2 style='font-size: 30px; color: #e2e8f0; margin-bottom: 2px;'>
+            <p style='font-size: 26px; color: #e2e8f0; margin-bottom: 2px;'>
                 Predicted Probability of Excellent Early Neurological Outcome (24h NIHSS 0-2 ) with Best Medical Treatment alone:
-            </h2>
+            </p>
             <h1 style='font-size: 34px; color: #e2e8f0; margin: 0;'>
                 <strong>{probs:.1%}</strong> <span style='font-size: 34px;'>(95% CI: {ci_lower:.1%}–{ci_upper:.1%})</span>
             </h1>
@@ -272,10 +285,10 @@ if st.session_state.prediction_made:
             <div style='background-color: #fee2e2; padding: 20px; border-radius: 12px; 
                 border-left: 6px solid #dc2626; margin: 20px 0; text-align: center;
                 box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>
-                <h2 style='font-size: 32px; color: #dc2626; margin: 0; font-weight: bold;'>
+                <h2 style='font-size: 28px; color: #dc2626; margin: 0; font-weight: bold;'>
                     EVT Not Recommended
                 </h2>
-                <p style='color: #991b1b; font-size: 24px; margin-top: 8px;'>
+                <p style='color: #991b1b; font-size: 20px; margin-top: 8px;'>
                     HTE analysis showed clinical harm of EVT
                 </p>
             </div>
@@ -286,10 +299,10 @@ if st.session_state.prediction_made:
             <div style='background-color: #f8fafc; padding: 20px; border-radius: 12px; 
                 border-left: 6px solid #64748b; margin: 20px 0; text-align: center;
                 box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>
-                <h2 style='font-size: 32px; color: #334155; margin: 0 0 8px 0; font-weight: bold;'>
+                <h2 style='font-size: 28px; color: #334155; margin: 0 0 8px 0; font-weight: bold;'>
                     Consider EVT
                 </h2>
-                <p style='font-size: 24px; color: #475569; margin: 0; font-weight: normal;'>
+                <p style='font-size: 20px; color: #475569; margin: 0; font-weight: normal;'>
                     HTE analysis showed statistically non-significant treatment benefit of EVT
                 </p>
             </div>
