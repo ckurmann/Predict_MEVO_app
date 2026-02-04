@@ -18,6 +18,7 @@ import matplotlib.pyplot as plt
 import streamlit as st
 import numpy as np
 import joblib
+import gc
 
 # CSS only once
 if not st.session_state.get('css_loaded', False):
@@ -109,17 +110,19 @@ if 'ci_upper' not in st.session_state:
     st.session_state.ci_upper = None
 if 'plot_fig' not in st.session_state:
     st.session_state.plot_fig = None
+if 'last_computed_hash' not in st.session_state:
+    st.session_state.last_computed_hash = None
 
 # Force sidebar render
 st.sidebar.markdown("#")
 
-# CACHED FUNCTIONS
+# CACHED FUNCTIONS WITH MEMORY LIMITS
 @st.cache_resource
 def load_model():
     clf = joblib.load('no_dominant_m2_24h_nihss_cpu.pkl')
     return clf
 
-@st.cache_data
+@st.cache_data(ttl=3600, max_entries=50)
 def create_input_data(age, sex_numeric, onset_to_img, nihss, prestroke_mrs, 
                      antiplatelets_numeric, anticoagulants_numeric, ivt_numeric,
                      hist_stroke_numeric, hist_tia_numeric, aht_numeric, 
@@ -131,7 +134,7 @@ def create_input_data(age, sex_numeric, onset_to_img, nihss, prestroke_mrs,
         diabetes_numeric, af_numeric, glucose, vessel_numeric, tissue_at_risk
     ]])
 
-@st.cache_data
+@st.cache_data(ttl=3600, max_entries=100)
 def calculate_probs_ci(probs):
     n_eff = 500
     se = np.sqrt(probs * (1 - probs) / n_eff)
@@ -139,7 +142,7 @@ def calculate_probs_ci(probs):
     ci_upper = np.minimum(1, probs + 1.96 * se)
     return ci_lower, ci_upper
 
-@st.cache_data
+@st.cache_data(ttl=3600, max_entries=10)
 def create_plot(probs, ci_lower, ci_upper, _image_path="Fig2_probabilites_good_outcome.png"):
     try:
         img = mpimg.imread(_image_path)
@@ -151,8 +154,10 @@ def create_plot(probs, ci_lower, ci_upper, _image_path="Fig2_probabilites_good_o
         ax.axvspan(x_lower, x_upper, color='red', alpha=0.3, ymin=0.12)
         ax.axvline(x_mean, color='red', linewidth=2, linestyle='--', ymin=0.12)
         ax.axis('off')
+        plt.close('all')  # Free memory immediately
         return fig
     except:
+        plt.close('all')
         return None
 
 # Load model
@@ -296,7 +301,7 @@ if not st.session_state.prediction_made:
 
 # Results - ONLY recompute if input changed
 if st.session_state.prediction_made:
-    if st.session_state.last_input_hash != st.session_state.get('last_computed_hash'):
+    if st.session_state.last_input_hash != st.session_state.last_computed_hash:
         st.session_state.probs = clf.predict_proba(input_data)[0, 1]
         st.session_state.ci_lower, st.session_state.ci_upper = calculate_probs_ci(st.session_state.probs)
         st.session_state.plot_fig = create_plot(st.session_state.probs, st.session_state.ci_lower, st.session_state.ci_upper)
@@ -310,7 +315,7 @@ if st.session_state.prediction_made:
     st.markdown(f"""
         <div style='text-align: center; padding: 20px;'>
             <p style='font-size: 26px; color: #e2e8f0; margin-bottom: 2px;'>Predicted Probability of Excellent Early Neurological Outcome (24h NIHSS 0-2 ) with Best Medical Treatment alone:</p>
-            <h1 style='font-size: 34px; color: #e2e8f0; margin: 0;'><strong>{probs:.1%}</strong> <span style='font-size: 34px;'>(95% CI: {ci_lower:.1%}–{ci_upper:.1%})</span></h1>
+            <h1 style='font-size: 34px; color: #e8fafc; margin: 0;'><strong>{probs:.1%}</strong> <span style='font-size: 34px;'>(95% CI: {ci_lower:.1%}–{ci_upper:.1%})</span></h1>
         </div>
     """, unsafe_allow_html=True)
 
@@ -334,13 +339,15 @@ if st.session_state.prediction_made:
             </div>
         """, unsafe_allow_html=True)
         
-    # Lazy plot from session state
+    # Lazy plot from session state + memory cleanup
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         if st.session_state.plot_fig:
             st.pyplot(st.session_state.plot_fig)
         else:
             st.warning("Prediction visualization image not found.")
+    
+    gc.collect()  # Force garbage collection
 
 # Info section
 st.markdown("---")
@@ -357,6 +364,9 @@ with st.expander("More information about this model"):
 
     Use in conjunction with clinical expertise and current guideline recommendations.
     """)
+
+# Final cleanup
+gc.collect()
 
 
 # %%
