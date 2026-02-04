@@ -20,6 +20,13 @@ import numpy as np
 import joblib
 import gc
 
+# MUST BE FIRST - Page config before any Streamlit calls
+st.set_page_config(
+    page_title="MDVO Predictor", 
+    layout="wide", 
+    initial_sidebar_state="expanded"
+)
+
 # CSS only once
 if not st.session_state.get('css_loaded', False):
     st.markdown("""
@@ -89,13 +96,7 @@ if not st.session_state.get('css_loaded', False):
     """, unsafe_allow_html=True)
     st.session_state.css_loaded = True
 
-st.set_page_config(
-    page_title="MDVO Predictor", 
-    layout="wide", 
-    initial_sidebar_state="expanded"
-)
-
-# Initialize ALL session state variables
+# Initialize session state
 if 'prediction_made' not in st.session_state:
     st.session_state.prediction_made = False
 if 'show_sidebar' not in st.session_state:
@@ -113,16 +114,21 @@ if 'plot_fig' not in st.session_state:
 if 'last_computed_hash' not in st.session_state:
     st.session_state.last_computed_hash = None
 
-# Force sidebar render
-st.sidebar.markdown("#")
-
-# CACHED FUNCTIONS WITH MEMORY LIMITS
+# Load model ONCE with cache_resource (only model, not figures)
 @st.cache_resource
 def load_model():
     clf = joblib.load('no_dominant_m2_24h_nihss_cpu.pkl')
     return clf
 
-@st.cache_data(ttl=3600, max_entries=50)
+clf = load_model()
+
+# Load base image ONCE globally (not cached, not per-user)
+try:
+    base_img = mpimg.imread("Fig2_probabilites_good_outcome.png")
+except:
+    base_img = None
+
+# Lightweight functions - NO CACHING (too small to justify overhead)
 def create_input_data(age, sex_numeric, onset_to_img, nihss, prestroke_mrs, 
                      antiplatelets_numeric, anticoagulants_numeric, ivt_numeric,
                      hist_stroke_numeric, hist_tia_numeric, aht_numeric, 
@@ -134,7 +140,6 @@ def create_input_data(age, sex_numeric, onset_to_img, nihss, prestroke_mrs,
         diabetes_numeric, af_numeric, glucose, vessel_numeric, tissue_at_risk
     ]])
 
-@st.cache_data(ttl=3600, max_entries=100)
 def calculate_probs_ci(probs):
     n_eff = 500
     se = np.sqrt(probs * (1 - probs) / n_eff)
@@ -142,26 +147,19 @@ def calculate_probs_ci(probs):
     ci_upper = np.minimum(1, probs + 1.96 * se)
     return ci_lower, ci_upper
 
-@st.cache_data(ttl=3600, max_entries=10)
-def create_plot(probs, ci_lower, ci_upper, _image_path="Fig2_probabilites_good_outcome.png"):
-    try:
-        img = mpimg.imread(_image_path)
-        fig, ax = plt.subplots(figsize=(10, 6))
-        ax.imshow(img, aspect='auto')
-        x_mean = 110 + probs * 800
-        x_lower = 110 + ci_lower * 800
-        x_upper = 110 + ci_upper * 800
-        ax.axvspan(x_lower, x_upper, color='red', alpha=0.3, ymin=0.12)
-        ax.axvline(x_mean, color='red', linewidth=2, linestyle='--', ymin=0.12)
-        ax.axis('off')
-        plt.close('all')
-        return fig
-    except:
-        plt.close('all')
+def create_plot(probs, ci_lower, ci_upper):
+    if base_img is None:
         return None
-
-# Load model
-clf = load_model()
+    plt.close('all')  # Clear any existing figures
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.imshow(base_img, aspect='auto')
+    x_mean = 110 + probs * 800
+    x_lower = 110 + ci_lower * 800
+    x_upper = 110 + ci_upper * 800
+    ax.axvspan(x_lower, x_upper, color='red', alpha=0.3, ymin=0.12)
+    ax.axvline(x_mean, color='red', linewidth=2, linestyle='--', ymin=0.12)
+    ax.axis('off')
+    return fig
 
 # Warning/Disclaimer
 st.markdown("""
@@ -218,8 +216,8 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-#--Predictors--
-st.sidebar.subheader("Baseline ")
+# Sidebar inputs
+st.sidebar.subheader("Baseline")
 age = st.sidebar.number_input("Age", 18, 100, 72, 1, format="%d")
 
 sex = st.sidebar.selectbox("Sex", ["Male", "Female"], index=0)
@@ -254,7 +252,7 @@ aht_numeric = 1 if st.sidebar.checkbox("Arterial Hypertension") else 0
 diabetes_numeric = 1 if st.sidebar.checkbox("Diabetes Mellitus") else 0
 af_numeric = 1 if st.sidebar.checkbox("Atrial Fibrillation") else 0
 
-# CACHED input data + change detection
+# Input data
 input_data = create_input_data(age, sex_numeric, onset_to_img, nihss, prestroke_mrs, 
                               antiplatelets_numeric, anticoagulants_numeric, ivt_numeric,
                               hist_stroke_numeric, hist_tia_numeric, aht_numeric,
@@ -290,7 +288,7 @@ if st.sidebar.button("Predict Outcome", use_container_width=True):
         """, height=0)
     st.rerun()
 
-# Instruction box
+# Instructions
 if not st.session_state.prediction_made:
     st.markdown("""
         <div style='padding: 20px; margin: 20px 0; text-align: center;'>
@@ -299,9 +297,14 @@ if not st.session_state.prediction_made:
         </div>
     """, unsafe_allow_html=True)
 
-# Results - FIXED comparison logic
+# Results
 if st.session_state.prediction_made:
     if st.session_state.last_input_hash != st.session_state.last_computed_hash:
+        # Clear previous plot
+        if st.session_state.plot_fig:
+            plt.close(st.session_state.plot_fig)
+            st.session_state.plot_fig = None
+        
         st.session_state.probs = clf.predict_proba(input_data)[0, 1]
         st.session_state.ci_lower, st.session_state.ci_upper = calculate_probs_ci(st.session_state.probs)
         st.session_state.plot_fig = create_plot(st.session_state.probs, st.session_state.ci_lower, st.session_state.ci_upper)
@@ -311,7 +314,6 @@ if st.session_state.prediction_made:
     ci_lower = st.session_state.ci_lower
     ci_upper = st.session_state.ci_upper
     
-    # FIXED color back to original #e2e8f0
     st.markdown(f"""
         <div style='text-align: center; padding: 20px;'>
             <p style='font-size: 26px; color: #e2e8f0; margin-bottom: 2px;'>Predicted Probability of Excellent Early Neurological Outcome (24h NIHSS 0-2 ) with Best Medical Treatment alone:</p>
@@ -339,14 +341,19 @@ if st.session_state.prediction_made:
             </div>
         """, unsafe_allow_html=True)
         
-    # Lazy plot from session state + memory cleanup
+    # Plot with proper cleanup
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         if st.session_state.plot_fig:
             st.pyplot(st.session_state.plot_fig)
+            # Critical: close figure after display to free memory
+            plt.close(st.session_state.plot_fig)
+            st.session_state.plot_fig = None
         else:
             st.warning("Prediction visualization image not found.")
     
+    # Aggressive memory cleanup
+    del input_data
     gc.collect()
 
 # Info section
@@ -365,6 +372,7 @@ with st.expander("More information about this model"):
     Use in conjunction with clinical expertise and current guideline recommendations.
     """)
 
+# Final cleanup
 gc.collect()
 
 
